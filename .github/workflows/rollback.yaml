@@ -1,0 +1,53 @@
+name: Rollback Deployment (by Version Tag)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_version:
+        description: 'Tag versi rollback (Contoh: 1.0.0)'
+        required: true
+        type: string
+        default: '1.0.0'
+
+jobs:
+  rollback:
+    name: Rollback to Version ${{ inputs.target_version }}
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Inject .env File from GitHub Secrets
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Pull Target Version Image
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-todolist
+        run: |
+          # Pull image versi target (misal: username/laravel-todolist:1.0.0)
+          docker pull ${{ env.DOCKER_IMAGE }}:${{ inputs.target_version }}
+          
+          # Timpa tag local :latest dengan versi target tersebut
+          docker tag ${{ env.DOCKER_IMAGE }}:${{ inputs.target_version }} ${{ env.DOCKER_IMAGE }}:latest
+
+      - name: Restart Containers
+        run: |
+          docker compose down
+          docker compose up -d
+
+      - name: Fix Permissions & Ensure SQLite Exists
+        run: |
+          docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
+          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database /var/www/html/storage
+          docker compose exec -T -u root app chmod -R 775 /var/www/html/database /var/www/html/storage
+
+      - name: Reset Laravel Cache
+        run: |
+          docker compose exec -T app php artisan config:clear
+          docker compose exec -T app php artisan route:clear
+          docker compose exec -T app php artisan view:clear
