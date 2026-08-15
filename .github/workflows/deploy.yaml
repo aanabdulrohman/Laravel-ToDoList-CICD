@@ -43,7 +43,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject .env File from GitHub Secrets
-        # Menuliskan isi secret ENV_FILE ke file .env di Runner
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
@@ -68,7 +67,6 @@ jobs:
 
       - name: Generate App Key & Run Migrations
         run: |
-          docker compose exec -T app php artisan key:generate --force
           docker compose exec -T app php artisan migrate --force
           docker compose exec -T app php artisan config:clear
           docker compose exec -T app php artisan route:clear
