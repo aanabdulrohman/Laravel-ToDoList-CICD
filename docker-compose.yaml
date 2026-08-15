@@ -1,6 +1,6 @@
 services:
   app:
-    image: aanabdulrohman/laravel-todolist:1.0.0
+    image: aanabdulrohman/laravel-todolist:${IMAGE_TAG:-1.0.0}
     container_name: laravel_app
     restart: unless-stopped
     volumes:

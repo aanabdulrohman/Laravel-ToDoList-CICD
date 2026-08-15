@@ -4,12 +4,11 @@ on:
   push:
     branches:
       - main
-
-env:
-  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-todolist
+    tags:
+      - '*.*.*'   # Trigger jika push tag seperti 1.0.1, 1.0.2
 
 jobs:
-  # JOB 1: Build & Push ke Docker Hub
+  # JOB 1: Build & Push Image ke Docker Hub
   build-and-push:
     runs-on: ubuntu-latest
     steps:
@@ -25,16 +24,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract Docker Metadata (Automatic Tagging)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-todolist
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: |
-            ${{ env.DOCKER_IMAGE }}:1.0.0
-            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
 
+  # JOB 2: Deploy ke Local Runner
   deploy-local:
     needs: build-and-push
     runs-on: self-hosted
@@ -52,20 +59,23 @@ jobs:
 
       - name: Pull Latest Docker Image
         run: |
+          # Dapatkan tag versi dari git ref_name (misal 1.0.1) atau default ke latest
+          export IMAGE_TAG=${GITHUB_REF_NAME#v}
           docker compose pull app
 
       - name: Restart Containers
         run: |
+          export IMAGE_TAG=${GITHUB_REF_NAME#v}
           docker compose down
           docker compose up -d
 
       - name: Fix Permissions & Ensure SQLite Exists
         run: |
           docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
-          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/.env /var/www/html/database /var/www/html/storage
-          docker compose exec -T -u root app chmod -R 775 /var/www/html/.env /var/www/html/database /var/www/html/storage
+          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database /var/www/html/storage
+          docker compose exec -T -u root app chmod -R 775 /var/www/html/database /var/www/html/storage
 
-      - name: Generate App Key & Run Migrations
+      - name: Run Database Migrations & Clear Cache
         run: |
           docker compose exec -T app php artisan migrate --force
           docker compose exec -T app php artisan config:clear

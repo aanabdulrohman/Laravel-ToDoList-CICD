@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_version:
-        description: 'Tag versi rollback (Contoh: 1.0.0)'
+        description: 'Tag versi tujuan rollback (Contoh: 1.0.0, 1.0.1)'
         required: true
         type: string
         default: '1.0.0'
@@ -25,29 +25,14 @@ jobs:
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Pull Target Version Image
-        env:
-          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-todolist
+      - name: Pull & Deploy Target Version
         run: |
-          # Pull image versi target (misal: username/laravel-todolist:1.0.0)
-          docker pull ${{ env.DOCKER_IMAGE }}:${{ inputs.target_version }}
-          
-          # Timpa tag local :latest dengan versi target tersebut
-          docker tag ${{ env.DOCKER_IMAGE }}:${{ inputs.target_version }} ${{ env.DOCKER_IMAGE }}:latest
-
-      - name: Restart Containers
-        run: |
+          export IMAGE_TAG=${{ inputs.target_version }}
+          docker compose pull app
           docker compose down
           docker compose up -d
 
-      - name: Fix Permissions & Ensure SQLite Exists
-        run: |
-          docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
-          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database /var/www/html/storage
-          docker compose exec -T -u root app chmod -R 775 /var/www/html/database /var/www/html/storage
-
-      - name: Reset Laravel Cache
+      - name: Reset Cache
         run: |
           docker compose exec -T app php artisan config:clear
           docker compose exec -T app php artisan route:clear
-          docker compose exec -T app php artisan view:clear
