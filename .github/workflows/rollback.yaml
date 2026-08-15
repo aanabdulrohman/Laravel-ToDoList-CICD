@@ -36,3 +36,7 @@ jobs:
         run: |
           docker compose exec -T app php artisan config:clear
           docker compose exec -T app php artisan route:clear
+      
+      - name: Clear All Laravel Optimization Caches
+        run: |
+          docker compose exec -T app php artisan optimize:clear

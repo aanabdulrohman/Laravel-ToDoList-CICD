@@ -16,7 +16,7 @@
                 <i class="fa-solid fa-check-double text-xl"></i>
             </div>
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Task Manager</h1>
-            <p class="text-sm text-slate-500 mt-1">Kelola tugas harian kamu dengan lebih terstruktur -abdul-</p>
+            <p class="text-sm text-slate-500 mt-1">Kelola tugas harian kamu dengan lebih terstruktur -abdul rohman-</p>
         </div>
 
         <!-- Main Card -->
