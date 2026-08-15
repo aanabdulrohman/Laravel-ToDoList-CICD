@@ -54,6 +54,10 @@ jobs:
       - name: Restart Containers
         run: |
           docker compose up -d
+      
+      - name: Ensure SQLite Database File Exists
+        run: |
+          docker compose exec -T app touch /var/www/html/database/database.sqlite
 
       - name: Run Database Migrations & Cache Clear
         run: |
