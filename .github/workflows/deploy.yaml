@@ -55,9 +55,11 @@ jobs:
         run: |
           docker compose up -d
       
-      - name: Ensure SQLite Database File Exists
+      - name: Ensure SQLite Database Exists & Fix Permissions
         run: |
-          docker compose exec -T app touch /var/www/html/database/database.sqlite
+          docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
+          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database
+          docker compose exec -T -u root app chmod -R 775 /var/www/html/database
 
       - name: Run Database Migrations & Cache Clear
         run: |
