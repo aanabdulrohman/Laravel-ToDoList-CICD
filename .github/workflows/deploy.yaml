@@ -35,13 +35,17 @@ jobs:
             ${{ env.DOCKER_IMAGE }}:1.0.0
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
-  # JOB 2: Deploy ke Lokal via Self-Hosted Runner
   deploy-local:
     needs: build-and-push
-    runs-on: self-hosted 
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Inject .env File from GitHub Secrets
+        # Menuliskan isi secret ENV_FILE ke file .env di Runner
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: Log in to Docker Hub
         run: |
@@ -51,16 +55,12 @@ jobs:
         run: |
           docker compose pull app
 
-      - name: Ensure .env File Exists on Runner
-        run: |
-          if [ -d .env ]; then rm -rf .env; fi
-          if [ ! -f .env ]; then touch .env; fi
-
       - name: Restart Containers
         run: |
+          docker compose down
           docker compose up -d
-      
-      - name: Ensure SQLite Database Exists & Fix Permissions
+
+      - name: Fix Permissions & Ensure SQLite Exists
         run: |
           docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
           docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database /var/www/html/storage
