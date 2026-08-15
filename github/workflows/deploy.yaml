@@ -1,0 +1,62 @@
+name: CI/CD Pipeline - Laravel Docker Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/laravel-todolist
+
+jobs:
+  # JOB 1: Build & Push ke Docker Hub
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:1.0.0
+            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+
+  # JOB 2: Deploy ke Lokal via Self-Hosted Runner
+  deploy-local:
+    needs: build-and-push
+    runs-on: self-hosted 
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Pull Latest Docker Image
+        run: |
+          docker compose pull app
+
+      - name: Restart Containers
+        run: |
+          docker compose up -d
+
+      - name: Run Database Migrations & Cache Clear
+        run: |
+          docker compose exec -T app php artisan migrate --force
+          docker compose exec -T app php artisan config:clear
+          docker compose exec -T app php artisan route:clear

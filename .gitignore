@@ -1,0 +1,64 @@
+# Vendor & Dependensi PHP/Node
+/vendor/
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+
+# Environment & Kredensial Sensitif
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+*.key
+
+# Abaikan data SQLite lokal agar tidak menimpa DB di server/runner
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+
+# Storage logs dan cache framework
+/storage/*.key
+/storage/app/*
+!/storage/app/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Hot-reload & Compiled Assets
+/public/build
+/public/hot
+/public/storage
+
+# GitHub Runner & Tools Lokal
+# Direktori folder tempat GitHub Self-Hosted Runner diinstal di lokal
+/actions-runner/
+/_work/
+
+# Editor & System Junk Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# PHPUnit & Coverage
+.phpunit.cache
+/phpunit.xml
+.php-cs-fixer.cache
