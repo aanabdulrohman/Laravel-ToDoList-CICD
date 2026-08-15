@@ -2,8 +2,6 @@ name: CI/CD Pipeline - Laravel Docker Deployment
 
 on:
   push:
-    branches:
-      - main
     tags:
       - '*.*.*'   # Trigger jika push tag seperti 1.0.1, 1.0.2
 
