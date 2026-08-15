@@ -51,6 +51,11 @@ jobs:
         run: |
           docker compose pull app
 
+      - name: Ensure .env File Exists on Runner
+        run: |
+          if [ -d .env ]; then rm -rf .env; fi
+          if [ ! -f .env ]; then touch .env; fi
+
       - name: Restart Containers
         run: |
           docker compose up -d
