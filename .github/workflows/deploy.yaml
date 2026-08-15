@@ -44,7 +44,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Docker Hub
-        shell: cmd
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
