@@ -63,8 +63,8 @@ jobs:
       - name: Fix Permissions & Ensure SQLite Exists
         run: |
           docker compose exec -T -u root app touch /var/www/html/database/database.sqlite
-          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/database /var/www/html/storage
-          docker compose exec -T -u root app chmod -R 775 /var/www/html/database /var/www/html/storage
+          docker compose exec -T -u root app chown -R www-data:www-data /var/www/html/.env /var/www/html/database /var/www/html/storage
+          docker compose exec -T -u root app chmod -R 775 /var/www/html/.env /var/www/html/database /var/www/html/storage
 
       - name: Generate App Key & Run Migrations
         run: |
